@@ -48,11 +48,60 @@ const userSchema = new mongoose.Schema({
     }
   },
 
+  // User-editable profile details
+  bio: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+
+  about: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+
+  location: {
+    type: String,
+    trim: true,
+    default: ""
+  },
+
+  avatar: {
+    type: String,
+    default: ""
+  },
+
+  coverImage: {
+    type: String,
+    default: ""
+  },
+
+  skills: [
+    {
+      name: { type: String, required: true, trim: true },
+      endorsedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
+    }
+  ],
+
+  projects: [
+    {
+      title: { type: String, trim: true },
+      description: { type: String, trim: true },
+      tags: [{ type: String, trim: true }],
+      status: { type: String, trim: true, default: "Live" },
+      link: { type: String, trim: true }
+    }
+  ],
+
   followers: [
     { type: mongoose.Schema.Types.ObjectId, ref: "User" }
   ],
   following: [
     { type: mongoose.Schema.Types.ObjectId, ref: "User" }
+  ],
+  savedPosts: [
+    { type: mongoose.Schema.Types.ObjectId, ref: "Post" }
   ]
 
 }, { timestamps: true });

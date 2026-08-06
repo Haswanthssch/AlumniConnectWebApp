@@ -1,4 +1,5 @@
 import { Post } from "../models/postModel.js";
+import User from "../models/userModel.js";
 import TryCatch from "../utils/TryCatch.js";
 import getDataUrl from "../utils/urlGenerator.js";
 import cloudinary from 'cloudinary';
@@ -6,23 +7,29 @@ import cloudinary from 'cloudinary';
 export const createPost=TryCatch(async(req,res)=>{
     const {post}=req.body;
     const file=req.file;
-    const fileUrl=getDataUrl(file);
-    const cloud=await cloudinary.v2.uploader.upload(fileUrl.content);
-    await Post.create({
-        post,
-        image:{
+    let image;
+    if(file){
+        const fileUrl=getDataUrl(file);
+        const cloud=await cloudinary.v2.uploader.upload(fileUrl.content);
+        image={
             id:cloud.public_id,
             url:cloud.secure_url
-        },
+        };
+    }
+    const newPost=await Post.create({
+        post,
+        image,
         owner:req.user._id,
     });
+    await newPost.populate("owner","-password");
     res.json({
-        message:"Post Created"
+        message:"Post Created",
+        post:newPost
     });
 });
 
 export const getAllPosts=TryCatch(async(req,res)=>{
-    const posts=await Post.find().sort({createdAt:-1});
+    const posts=await Post.find().sort({createdAt:-1}).populate("owner","-password");
     res.json(posts);
 });
 
@@ -45,11 +52,71 @@ export const deletePost=TryCatch(async(req,res)=>{
             message:"Unauthorised User",
         });
     }
-    await cloudinary.v2.uploader.destroy(post.image.id);
+    if(post.image?.id)
+    {
+        await cloudinary.v2.uploader.destroy(post.image.id);
+    }
     await post.deleteOne();
     res.json({
         message:"Post Deleted",
     });
+});
+
+export const likeUnlikePost=TryCatch(async(req,res)=>{
+    const post=await Post.findById(req.params.id);
+    if(!post)
+    {
+        return res.status(404).json({
+            message:"Post cannot be found"
+        });
+    }
+    const alreadyLiked=post.likes.includes(req.user._id);
+    if(alreadyLiked)
+    {
+        post.likes=post.likes.filter((id)=>id.toString()!==req.user._id.toString());
+    }
+    else
+    {
+        post.likes.push(req.user._id);
+    }
+    await post.save();
+    res.json({
+        message:alreadyLiked?"Post Unliked":"Post Liked",
+        likes:post.likes
+    });
+});
+
+export const savePost=TryCatch(async(req,res)=>{
+    const post=await Post.findById(req.params.id);
+    if(!post)
+    {
+        return res.status(404).json({
+            message:"Post cannot be found"
+        });
+    }
+    const user=await User.findById(req.user._id);
+    const alreadySaved=user.savedPosts.includes(post._id);
+    if(alreadySaved)
+    {
+        user.savedPosts=user.savedPosts.filter((id)=>id.toString()!==post._id.toString());
+    }
+    else
+    {
+        user.savedPosts.push(post._id);
+    }
+    await user.save();
+    res.json({
+        message:alreadySaved?"Post Unsaved":"Post Saved",
+        savedPosts:user.savedPosts
+    });
+});
+
+export const getSavedPosts=TryCatch(async(req,res)=>{
+    const user=await User.findById(req.user._id).populate({
+        path:"savedPosts",
+        populate:{path:"owner",select:"-password"}
+    });
+    res.json(user.savedPosts);
 });
 
 export const commentOnPost=TryCatch(async(req,res)=>{

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import Avatar from '../components/common/Avatar';
 import Button from '../components/common/Button';
+import DemoBadge from '../components/common/DemoBadge';
 import {
   UserIcon,
   BellIcon,
@@ -62,8 +63,11 @@ const Settings = () => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-        <p className="text-gray-600">Manage your account preferences and privacy settings</p>
+        <div className="flex items-center gap-3 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+          <DemoBadge label="Static demo" />
+        </div>
+        <p className="text-gray-600">Manage your account preferences and privacy settings (preferences are stored locally only — no settings backend yet)</p>
       </motion.div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

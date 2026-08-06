@@ -90,6 +90,16 @@ export const authService = {
       throw error.response?.data || { message: 'Failed to get user profile' };
     }
   },
+
+  // Endorse (or un-endorse) a skill on another user's profile
+  endorseSkill: async (userId, skillName) => {
+    try {
+      const response = await api.post(`/user/${userId}/endorse`, { skillName });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to endorse skill' };
+    }
+  },
 };
 
 export const postService = {
@@ -164,6 +174,26 @@ export const postService = {
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to comment on post' };
+    }
+  },
+
+  // Save/Unsave post
+  savePost: async (postId) => {
+    try {
+      const response = await api.post(`/post/save/${postId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to save post' };
+    }
+  },
+
+  // Get saved posts
+  getSavedPosts: async () => {
+    try {
+      const response = await api.get('/post/saved/all');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to get saved posts' };
     }
   },
 

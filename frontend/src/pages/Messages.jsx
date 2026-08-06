@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Avatar from '../components/common/Avatar';
 import Button from '../components/common/Button';
+import DemoBadge from '../components/common/DemoBadge';
 import {
   MagnifyingGlassIcon,
   PaperAirplaneIcon,
@@ -219,7 +220,10 @@ const Messages = () => {
             {/* Header */}
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">Messages</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-semibold text-gray-900">Messages</h2>
+                  <DemoBadge label="Static demo" />
+                </div>
                 <Button size="sm" className="flex items-center space-x-1">
                   <PlusIcon className="h-4 w-4" />
                   <span>New</span>

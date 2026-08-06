@@ -1,141 +1,338 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import {
+  PlusIcon,
+  UserGroupIcon,
+  BriefcaseIcon,
+  ChatBubbleLeftRightIcon,
+} from '@heroicons/react/24/outline';
 import CreatePost from '../components/posts/CreatePost';
 import PostCard from '../components/posts/PostCard';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import Avatar from '../components/common/Avatar';
+import DemoBadge from '../components/common/DemoBadge';
+import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useAuth } from '../context/AuthContext';
-
-// Mock data for posts
-const mockPosts = [
-  {
-    _id: '1',
-    post: 'Just wrapped up an amazing project at Google involving machine learning for search optimization! It\'s incredible to see how the algorithms we learned in college are being applied at scale. For current students - don\'t underestimate your data structures and algorithms courses! 🚀',
-    owner: {
-      _id: '1',
-      name: 'Priya Sharma',
-      role: 'alumni',
-      batch: '2018-22',
-      department: 'Computer Science',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b6d6b3b0?w=150'
-    },
-    image: {
-      url: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600'
-    },
-    likes: ['2', '3', '4'],
-    comments: [
-      {
-        _id: '1',
-        user: {
-          name: 'Ananya Patel',
-          avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150'
-        },
-        comment: 'This is so inspiring! I\'m currently taking DS&A and struggling a bit. Any resources you\'d recommend?',
-        createdAt: '2025-09-17T11:00:00Z'
-      }
-    ],
-    createdAt: '2025-09-17T10:30:00Z'
-  },
-  {
-    _id: '2',
-    post: 'Exciting news! Tesla is hiring for multiple engineering positions, especially in battery technology and autonomous systems. If you\'re a recent graduate or student interested in sustainable transportation, DM me your resume. Let\'s build the future together! ⚡🚗',
-    owner: {
-      _id: '2',
-      name: 'Rahul Kumar',
-      role: 'alumni',
-      batch: '2016-20',
-      department: 'Mechanical Engineering',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'
-    },
-    image: {
-      url: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600'
-    },
-    likes: ['1', '3', '4', '5'],
-    comments: [],
-    createdAt: '2025-09-17T09:15:00Z'
-  }
-];
+import { postService } from '../services/auth';
+import {
+  JOB_RECOMMENDATIONS,
+  UPCOMING_EVENTS,
+  TRENDING_TAGS,
+  DEMO_STATS,
+} from '../utils/staticData';
 
 const Home = () => {
   const { user } = useAuth();
   const [showCreatePost, setShowCreatePost] = useState(false);
-  const [posts, setPosts] = useState(mockPosts);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleCreatePost = (postData) => {
-    const newPost = {
-      _id: Date.now().toString(),
-      post: postData.get('post'),
-      owner: user,
-      image: postData.get('image') ? { url: URL.createObjectURL(postData.get('image')) } : null,
-      likes: [],
-      comments: [],
-      createdAt: new Date().toISOString()
-    };
-    
-    setPosts([newPost, ...posts]);
-    setShowCreatePost(false);
+  // Live: posts come from the backend (/api/post/all)
+  const fetchPosts = async () => {
+    try {
+      const data = await postService.getAllPosts();
+      setPosts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to load posts:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleLike = (postId) => {
-    setPosts(posts.map(post => {
-      if (post._id === postId) {
-        const isLiked = post.likes.includes(user.id);
-        return {
-          ...post,
-          likes: isLiked 
-            ? post.likes.filter(id => id !== user.id)
-            : [...post.likes, user.id]
-        };
-      }
-      return post;
-    }));
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const handleCreatePost = async (postData) => {
+    try {
+      await postService.createPost(postData);
+      await fetchPosts();
+      setShowCreatePost(false);
+    } catch (error) {
+      console.error('Failed to create post:', error);
+    }
   };
 
-  const handleComment = (postId, commentText) => {
-    setPosts(posts.map(post => {
-      if (post._id === postId) {
-        const newComment = {
-          _id: Date.now().toString(),
-          user: user,
-          comment: commentText,
-          createdAt: new Date().toISOString()
-        };
-        return {
-          ...post,
-          comments: [...post.comments, newComment]
-        };
-      }
-      return post;
-    }));
+  const handleLike = async (postId) => {
+    try {
+      await postService.likePost(postId);
+      await fetchPosts();
+    } catch (error) {
+      console.error('Failed to like post:', error);
+    }
   };
+
+  const handleComment = async (postId, commentText) => {
+    try {
+      await postService.commentOnPost(postId, { comment: commentText });
+      await fetchPosts();
+    } catch (error) {
+      console.error('Failed to comment on post:', error);
+    }
+  };
+
+  const handleSave = async (postId) => {
+    try {
+      await postService.savePost(postId);
+    } catch (error) {
+      console.error('Failed to save post:', error);
+    }
+  };
+
+  const handleDelete = async (postId) => {
+    try {
+      await postService.deletePost(postId);
+      await fetchPosts();
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+    }
+  };
+
+  // Live: connections come from the logged-in user's real follower list
+  const connectionsCount = user?.followers?.length ?? 0;
+
+  const stats = [
+    {
+      label: 'Connections',
+      value: connectionsCount,
+      icon: UserGroupIcon,
+      iconWrap: 'bg-blue-100 text-blue-600',
+      demo: false,
+    },
+    {
+      label: 'Job Opportunities',
+      value: DEMO_STATS.jobOpportunities,
+      icon: BriefcaseIcon,
+      iconWrap: 'bg-green-100 text-green-600',
+      demo: true,
+    },
+    {
+      label: 'Messages',
+      value: DEMO_STATS.messages,
+      icon: ChatBubbleLeftRightIcon,
+      iconWrap: 'bg-purple-100 text-purple-600',
+      demo: true,
+    },
+  ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Welcome Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Welcome back, {user?.name}! 👋
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Stay connected with your alumni network and discover new opportunities.
-            </p>
-          </div>
-          <motion.button
-            onClick={() => setShowCreatePost(true)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ---------------- MAIN COLUMN ---------------- */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Brand / welcome header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
           >
-            <PlusIcon className="h-5 w-5" />
-            <span>Create Post</span>
-          </motion.button>
+            <div className="flex items-center space-x-4">
+              <div className="w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-bold text-lg">AC</span>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Alumni Connect</h1>
+                <p className="text-gray-500 mt-0.5">
+                  Stay connected, explore opportunities, and grow your network.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {stats.map((stat, i) => {
+              const Icon = stat.icon;
+              return (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 * i }}
+                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
+                >
+                  <div className="flex items-center">
+                    <div className={`p-3 rounded-full ${stat.iconWrap}`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <div className="ml-4">
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                          {stat.label}
+                        </p>
+                        {stat.demo && <DemoBadge />}
+                      </div>
+                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Inline composer */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
+          >
+            <div className="flex items-center space-x-3">
+              <Avatar src={user?.avatar} name={user?.name} size="md" />
+              <button
+                onClick={() => setShowCreatePost(true)}
+                className="flex-1 text-left px-4 py-2.5 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-500 transition-colors duration-200"
+              >
+                What's on your mind? Share with your alumni network...
+              </button>
+              <motion.button
+                onClick={() => setShowCreatePost(true)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center space-x-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex-shrink-0"
+              >
+                <PlusIcon className="h-5 w-5" />
+                <span className="hidden sm:inline">Post</span>
+              </motion.button>
+            </div>
+          </motion.div>
+
+          {/* Feed */}
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-gray-900">Recent Updates</h2>
+
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <LoadingSpinner size="lg" />
+              </div>
+            ) : posts.length === 0 ? (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">
+                <p className="text-gray-500">
+                  No posts yet. Be the first to share something with your network!
+                </p>
+                <button
+                  onClick={() => setShowCreatePost(true)}
+                  className="mt-4 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                >
+                  Create a post
+                </button>
+              </div>
+            ) : (
+              posts.map((post, index) => (
+                <motion.div
+                  key={post._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <PostCard
+                    post={post}
+                    onLike={handleLike}
+                    onComment={handleComment}
+                    onShare={(p) => console.log('Share post:', p)}
+                    onSave={handleSave}
+                    onDelete={handleDelete}
+                    currentUserId={user?._id}
+                  />
+                </motion.div>
+              ))
+            )}
+          </div>
         </div>
-      </motion.div>
+
+        {/* ---------------- SIDEBAR ---------------- */}
+        <aside className="space-y-6">
+          {/* Job Recommendations (static) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-gray-900">Job Recommendations</h3>
+                <DemoBadge />
+              </div>
+              <button className="text-sm text-blue-600 hover:underline">View all</button>
+            </div>
+            <div className="space-y-4">
+              {JOB_RECOMMENDATIONS.map((job) => (
+                <div key={job.id} className="flex items-start space-x-3">
+                  <div
+                    className={`w-9 h-9 rounded-lg bg-gradient-to-br ${job.logoColor} flex items-center justify-center text-white text-sm font-semibold flex-shrink-0`}
+                  >
+                    {job.initial}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{job.title}</p>
+                    <p className="text-xs text-gray-500">{job.company} • {job.location}</p>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-xs text-blue-600 font-medium">{job.type}</span>
+                      <button className="text-xs text-blue-600 font-medium hover:underline">
+                        Apply
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Upcoming Events (static) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-gray-900">Upcoming Events</h3>
+                <DemoBadge />
+              </div>
+              <button className="text-sm text-blue-600 hover:underline">See all</button>
+            </div>
+            <div className="space-y-4">
+              {UPCOMING_EVENTS.map((event) => (
+                <div key={event.id} className="flex items-start space-x-3">
+                  <div className="w-11 h-11 rounded-lg bg-blue-600 text-white flex flex-col items-center justify-center flex-shrink-0">
+                    <span className="text-[10px] uppercase leading-none">{event.month}</span>
+                    <span className="text-base font-bold leading-none">{event.day}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-900">{event.title}</p>
+                    <p className="text-xs text-gray-500">{event.location}</p>
+                    <span
+                      className={`inline-block mt-1 text-xs font-medium px-2 py-0.5 rounded-full ${event.modeColor}`}
+                    >
+                      {event.mode}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Trending (static) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <h3 className="font-semibold text-gray-900">Trending</h3>
+              <DemoBadge />
+            </div>
+            <div className="space-y-2">
+              {TRENDING_TAGS.map((tag) => (
+                <button
+                  key={tag}
+                  className="block text-sm text-blue-600 hover:underline"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        </aside>
+      </div>
 
       {/* Create Post Modal */}
       {showCreatePost && (
@@ -145,114 +342,13 @@ const Home = () => {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
         >
           <div className="w-full max-w-lg">
-            <CreatePost 
+            <CreatePost
               onCreatePost={handleCreatePost}
               onClose={() => setShowCreatePost(false)}
             />
           </div>
         </motion.div>
       )}
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
-        >
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Connections</p>
-              <p className="text-2xl font-bold text-gray-900">156</p>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
-        >
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-full">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Job Opportunities</p>
-              <p className="text-2xl font-bold text-gray-900">23</p>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
-        >
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-100 rounded-full">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Messages</p>
-              <p className="text-2xl font-bold text-gray-900">8</p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Posts Feed */}
-      <div className="space-y-6">
-        <motion.h2
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-xl font-semibold text-gray-900"
-        >
-          Recent Updates
-        </motion.h2>
-        
-        {posts.map((post, index) => (
-          <motion.div
-            key={post._id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <PostCard
-              post={post}
-              onLike={handleLike}
-              onComment={handleComment}
-              onShare={(post) => console.log('Share post:', post)}
-              onSave={(postId) => console.log('Save post:', postId)}
-              onDelete={(postId) => console.log('Delete post:', postId)}
-              currentUserId={user?.id}
-            />
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Load More Button */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="text-center py-8"
-      >
-        <button className="px-6 py-2 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors duration-200">
-          Load More Posts
-        </button>
-      </motion.div>
     </div>
   );
 };
