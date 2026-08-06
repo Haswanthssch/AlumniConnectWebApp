@@ -6,13 +6,23 @@ import userRoutes from './routes/userRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import cloudinary from 'cloudinary';
 import cors from 'cors';
+
+dotenv.config();
+
 const app=express();
+
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'https://alumniconnect-coral.vercel.app',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: allowedOrigins,
   credentials: true,
 }));
 
-dotenv.config();
 connectDb();
 cloudinary.v2.config({
     cloud_name:process.env.CLOUD_NAME,
