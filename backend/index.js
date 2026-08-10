@@ -4,6 +4,7 @@ import connectDb from './database/db.js';
 import cookieParser from 'cookie-parser';
 import userRoutes from './routes/userRoutes.js';
 import postRoutes from './routes/postRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
 import cloudinary from 'cloudinary';
 import cors from 'cors';
 
@@ -33,6 +34,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use("/api/user",userRoutes);
 app.use("/api/post",postRoutes);
+app.use("/api/message",messageRoutes);
 const port=process.env.PORT;
 app.get("/",(req,res)=>{
     res.send("Hello");

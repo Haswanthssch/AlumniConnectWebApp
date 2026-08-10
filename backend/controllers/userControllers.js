@@ -53,6 +53,19 @@ export const loginUser=TryCatch(async(req,res,next)=>{
     return res;
 });
 
+export const getAllUsers=TryCatch(async(req,res)=>{
+    const search=req.query.search||"";
+    const users=await User.find({
+        _id:{$ne:req.user._id},
+        name:{$regex:search,$options:"i"}
+    })
+        .select("name avatar role department batch currentEmploymentStatus")
+        .sort({name:1})
+        .limit(30)
+        .lean();
+    res.json(users);
+});
+
 export const myProfile=TryCatch(async(req,res)=>{
     const user=await User.findById(req.user._id)
         .select("-password")
