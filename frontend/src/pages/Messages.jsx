@@ -105,6 +105,16 @@ const Messages = () => {
     }
   }, [location.state, openConversationWith]);
 
+  // If we opened a placeholder chat but a real conversation with that person
+  // already exists, upgrade to it once the conversation list has loaded.
+  useEffect(() => {
+    if (!selectedConversation || selectedConversation._id) return;
+    const existing = conversations.find(
+      (c) => c.participant?._id === selectedConversation.participant?._id
+    );
+    if (existing) setSelectedConversation(existing);
+  }, [conversations, selectedConversation]);
+
   const handleSelectConversation = (conversation) => {
     setSelectedConversation(conversation);
     setConversations((prev) =>
@@ -148,6 +158,8 @@ const Messages = () => {
         setUserResults(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to load users:', error);
+        setUserResults([]);
+        toast.error(error.message || 'Could not load users. Is the server updated?');
       } finally {
         setLoadingUsers(false);
       }

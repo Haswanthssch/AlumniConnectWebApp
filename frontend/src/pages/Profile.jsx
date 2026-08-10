@@ -172,6 +172,23 @@ const Profile = () => {
     }
   };
 
+  // Open the Messages page with this profile pre-selected as the recipient.
+  const handleMessage = () => {
+    const recipientId = id || account?._id;
+    if (!recipientId) return;
+    navigate('/messages', {
+      state: {
+        recipient: {
+          _id: recipientId,
+          name: profileUser.name,
+          avatar: profileUser.avatar,
+          role: profileUser.role,
+          department: profileUser.department,
+        },
+      },
+    });
+  };
+
   // ---- Edit profile ----
   const openEdit = () => {
     setForm({
@@ -362,7 +379,7 @@ const Profile = () => {
                         <UserPlusIcon className="h-4 w-4" />
                         <span>{isFollowing ? 'Following' : 'Follow'}</span>
                       </Button>
-                      <Button variant="outline" className="flex items-center space-x-2">
+                      <Button variant="outline" className="flex items-center space-x-2" onClick={handleMessage}>
                         <ChatBubbleLeftRightIcon className="h-4 w-4" />
                         <span>Message</span>
                       </Button>
