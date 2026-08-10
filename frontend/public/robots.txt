@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://alumniconnect-coral.vercel.app/sitemap.xml
