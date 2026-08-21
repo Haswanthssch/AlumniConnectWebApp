@@ -1,4 +1,8 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
+
+// Force Node's DNS resolver to use Google DNS so the Atlas SRV lookup works
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 const connectDb=async()=>{
     try{

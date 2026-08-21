@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import AlumniCard from '../components/network/AlumniCard';
 import ConnectionCard from '../components/network/ConnectionCard';
 import Button from '../components/common/Button';
+import DemoBadge from '../components/common/DemoBadge';
 import {
   MagnifyingGlassIcon,
   UserPlusIcon,
@@ -182,8 +183,11 @@ const Network = () => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Network</h1>
-        <p className="text-gray-600">Connect with alumni and fellow students to expand your professional network</p>
+        <div className="flex items-center gap-3 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900">Network</h1>
+          <DemoBadge label="Static demo" />
+        </div>
+        <p className="text-gray-600">Connect with alumni and fellow students to expand your professional network (directory is demo data — the backend has follow/unfollow but no user-listing endpoint yet)</p>
       </motion.div>
 
       {/* Stats Cards */}

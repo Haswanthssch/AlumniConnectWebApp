@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Avatar = ({ src, name = '', size = 'md', className = '', showStatus = false, isOnline = false }) => {
+const Avatar = ({ src, name = '', size = 'md', className = '', showStatus = false, isOnline = false, onClick }) => {
   const sizes = {
     xs: 'w-6 h-6 text-xs',
     sm: 'w-8 h-8 text-sm',
@@ -23,7 +23,7 @@ const Avatar = ({ src, name = '', size = 'md', className = '', showStatus = fals
   const baseClasses = `${sizes[size]} rounded-full flex items-center justify-center font-medium relative ${className}`;
 
   return (
-    <div className="relative inline-block">
+    <div className="relative inline-block" onClick={onClick}>
       {src ? (
         <img
           src={src}

@@ -90,6 +90,16 @@ export const authService = {
       throw error.response?.data || { message: 'Failed to get user profile' };
     }
   },
+
+  // Endorse (or un-endorse) a skill on another user's profile
+  endorseSkill: async (userId, skillName) => {
+    try {
+      const response = await api.post(`/user/${userId}/endorse`, { skillName });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to endorse skill' };
+    }
+  },
 };
 
 export const postService = {
@@ -167,6 +177,26 @@ export const postService = {
     }
   },
 
+  // Save/Unsave post
+  savePost: async (postId) => {
+    try {
+      const response = await api.post(`/post/save/${postId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to save post' };
+    }
+  },
+
+  // Get saved posts
+  getSavedPosts: async () => {
+    try {
+      const response = await api.get('/post/saved/all');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to get saved posts' };
+    }
+  },
+
   // Delete comment
   deleteComment: async (postId, commentId) => {
     try {
@@ -199,6 +229,49 @@ export const networkService = {
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Failed to search users' };
+    }
+  },
+
+  // List users (used to pick a recipient when starting a conversation)
+  getAllUsers: async (search = '') => {
+    try {
+      const response = await api.get('/user/all', { params: { search } });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to get users' };
+    }
+  },
+};
+
+// Messaging services
+export const messageService = {
+  // Get all of the current user's conversations
+  getChats: async () => {
+    try {
+      const response = await api.get('/message/chats');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to get conversations' };
+    }
+  },
+
+  // Get all messages in a conversation
+  getMessages: async (chatId) => {
+    try {
+      const response = await api.get(`/message/${chatId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to get messages' };
+    }
+  },
+
+  // Send a message to a user (creates the conversation if needed)
+  sendMessage: async (recipientId, text) => {
+    try {
+      const response = await api.post('/message/send', { recipientId, text });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to send message' };
     }
   },
 };

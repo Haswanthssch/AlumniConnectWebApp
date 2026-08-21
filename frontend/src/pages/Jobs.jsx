@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Avatar from '../components/common/Avatar';
 import Button from '../components/common/Button';
+import DemoBadge from '../components/common/DemoBadge';
 import {
   MagnifyingGlassIcon,
   MapPinIcon,
@@ -132,8 +133,11 @@ const Jobs = () => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Job Opportunities</h1>
-        <p className="text-gray-600">Discover career opportunities posted by alumni</p>
+        <div className="flex items-center gap-3 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900">Job Opportunities</h1>
+          <DemoBadge label="Static demo" />
+        </div>
+        <p className="text-gray-600">Discover career opportunities posted by alumni (no jobs backend yet — showing demo data)</p>
       </motion.div>
 
       {/* Search and Filters */}

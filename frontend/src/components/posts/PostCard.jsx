@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   HeartIcon,
   ChatBubbleOvalLeftIcon,
@@ -29,6 +30,11 @@ const PostCard = ({
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [showOptions, setShowOptions] = useState(false);
+  const navigate = useNavigate();
+
+  const goToOwnerProfile = () => {
+    if (post.owner?._id) navigate(`/profile/${post.owner._id}`);
+  };
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -62,10 +68,15 @@ const PostCard = ({
               src={post.owner?.avatar} 
               name={post.owner?.name}
               size="md"
+              onClick={goToOwnerProfile}
+              className="cursor-pointer"
             />
             <div>
               <div className="flex items-center space-x-2">
-                <h3 className="font-semibold text-gray-900 hover:text-blue-600 cursor-pointer">
+                <h3
+                  onClick={goToOwnerProfile}
+                  className="font-semibold text-gray-900 hover:text-blue-600 cursor-pointer"
+                >
                   {post.owner?.name}
                 </h3>
                 <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full capitalize">
