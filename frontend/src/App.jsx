@@ -10,6 +10,7 @@ import Network from './pages/Network';
 import Jobs from './pages/Jobs';
 import Messages from './pages/Messages';
 import Settings from './pages/Settings';
+import Events from './pages/Events';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import { useAuth } from './context/AuthContext';
@@ -91,6 +92,13 @@ function AppContent() {
             <ProtectedRoute>
               <Layout>
                 <Jobs />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/events" element={
+            <ProtectedRoute>
+              <Layout>
+                <Events />
               </Layout>
             </ProtectedRoute>
           } />

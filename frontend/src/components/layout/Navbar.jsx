@@ -5,6 +5,7 @@ import {
   HomeIcon,
   UserGroupIcon,
   BriefcaseIcon,
+  CalendarDaysIcon,
   ChatBubbleLeftRightIcon,
   BellIcon,
   MagnifyingGlassIcon,
@@ -16,6 +17,7 @@ import {
   HomeIcon as HomeIconSolid,
   UserGroupIcon as UserGroupIconSolid,
   BriefcaseIcon as BriefcaseIconSolid,
+  CalendarDaysIcon as CalendarDaysIconSolid,
   ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid,
 } from '@heroicons/react/24/solid';
 import { useAuth } from '../../context/AuthContext';
@@ -46,6 +48,12 @@ const Navbar = () => {
       path: '/jobs',
       icon: BriefcaseIcon,
       iconSolid: BriefcaseIconSolid,
+    },
+    {
+      name: 'Events',
+      path: '/events',
+      icon: CalendarDaysIcon,
+      iconSolid: CalendarDaysIconSolid,
     },
     {
       name: 'Messages',

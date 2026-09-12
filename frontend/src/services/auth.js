@@ -210,6 +210,44 @@ export const postService = {
   },
 };
 
+export const eventService = {
+  getAllEvents: async () => {
+    try {
+      const response = await api.get('/event/all');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to get events' };
+    }
+  },
+
+  createEvent: async (eventData) => {
+    try {
+      const response = await api.post('/event/create', eventData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to create event' };
+    }
+  },
+
+  updateEvent: async (eventId, eventData) => {
+    try {
+      const response = await api.put(`/event/${eventId}`, eventData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to update event' };
+    }
+  },
+
+  deleteEvent: async (eventId) => {
+    try {
+      const response = await api.delete(`/event/${eventId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Failed to delete event' };
+    }
+  },
+};
+
 // Network/Connection services
 export const networkService = {
   // Get alumni directory

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   PlusIcon,
@@ -12,10 +13,9 @@ import Avatar from '../components/common/Avatar';
 import DemoBadge from '../components/common/DemoBadge';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { useAuth } from '../context/AuthContext';
-import { postService } from '../services/auth';
+import { eventService, postService } from '../services/auth';
 import {
   JOB_RECOMMENDATIONS,
-  UPCOMING_EVENTS,
   TRENDING_TAGS,
   DEMO_STATS,
 } from '../utils/staticData';
@@ -24,6 +24,7 @@ const Home = () => {
   const { user } = useAuth();
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [posts, setPosts] = useState([]);
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Live: posts come from the backend (/api/post/all)
@@ -40,6 +41,9 @@ const Home = () => {
 
   useEffect(() => {
     fetchPosts();
+    eventService.getAllEvents()
+      .then((data) => setEvents(Array.isArray(data) ? data.slice(0, 3) : []))
+      .catch((error) => console.error('Failed to load events:', error));
   }, []);
 
   const handleCreatePost = async (postData) => {
@@ -276,7 +280,7 @@ const Home = () => {
             </div>
           </motion.div>
 
-          {/* Upcoming Events (static) */}
+          {/* Upcoming Events */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -285,28 +289,27 @@ const Home = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-gray-900">Upcoming Events</h3>
-                <DemoBadge />
               </div>
-              <button className="text-sm text-blue-600 hover:underline">See all</button>
+                <Link to="/events" className="text-sm text-blue-600 hover:underline">See all</Link>
             </div>
             <div className="space-y-4">
-              {UPCOMING_EVENTS.map((event) => (
-                <div key={event.id} className="flex items-start space-x-3">
+              {events.length === 0 ? (
+                <p className="text-sm text-gray-500">No upcoming events yet.</p>
+              ) : events.map((event) => {
+                const eventDate = new Date(event.date);
+                return (
+                <div key={event._id} className="flex items-start space-x-3">
                   <div className="w-11 h-11 rounded-lg bg-blue-600 text-white flex flex-col items-center justify-center flex-shrink-0">
-                    <span className="text-[10px] uppercase leading-none">{event.month}</span>
-                    <span className="text-base font-bold leading-none">{event.day}</span>
+                    <span className="text-[10px] uppercase leading-none">{eventDate.toLocaleString('en-US', { month: 'short' })}</span>
+                    <span className="text-base font-bold leading-none">{eventDate.getDate()}</span>
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-gray-900">{event.title}</p>
                     <p className="text-xs text-gray-500">{event.location}</p>
-                    <span
-                      className={`inline-block mt-1 text-xs font-medium px-2 py-0.5 rounded-full ${event.modeColor}`}
-                    >
-                      {event.mode}
-                    </span>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </motion.div>
 
