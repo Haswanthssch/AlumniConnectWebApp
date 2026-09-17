@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -29,7 +29,21 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults]=useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
+  useEffect(()=>{
+    if(!searchQuery.trim())
+    {
+      setSearchResults([]);
+      return;
+    }
+    const timer=setTimeout(()=>{
+      handleSearch();
+    },300);
+
+    return ()=>clearTimeout(timer);
+  },[searchQuery]);
   const navItems = [
     {
       name: 'Home',
@@ -68,10 +82,34 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    console.log('Searching for:', searchQuery);
-  };
+  const handleSearch = async (e) => {
+    if (e) e.preventDefault();
+
+    if (!searchQuery.trim()) {
+        setSearchResults([]);
+        return;
+    }
+    try {
+        setIsSearching(true);
+        const token = localStorage.getItem("token");
+        const response = await fetch(
+            `http://localhost:5000/api/user/search?q=${encodeURIComponent(searchQuery)}`,
+            {
+              headers: {
+              Authorization: `Bearer ${token}`
+              }
+            }
+        );
+
+        const data = await response.json();
+        setSearchResults(data);
+        console.log(data);
+    } catch (error) {
+        console.error("Search error:", error);
+    } finally {
+        setIsSearching(false);
+    }
+};
 
   return (
     <motion.nav 
@@ -98,9 +136,13 @@ const Navbar = () => {
           </motion.div>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-lg mx-8">
+          <div className="flex-1 max-w-lg mx-8 relative">
             <form onSubmit={handleSearch} className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+
+              <MagnifyingGlassIcon
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+              />
+
               <input
                 type="text"
                 placeholder="Search alumni, students, posts..."
@@ -108,7 +150,62 @@ const Navbar = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               />
+
             </form>
+
+            {/* Search Results */}
+            {searchQuery.trim() && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
+
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <p className="text-xs font-semibold text-gray-500 uppercase">
+                    People
+                  </p>
+                </div>
+
+                {searchResults.map((user) => (
+                  <div
+                    key={user._id}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => {
+                      navigate(`/profile/${user._id}`);
+                      setSearchQuery('');
+                      setSearchResults([]);
+                    }}
+                  >
+
+                    {/* Avatar */}
+                    <Avatar
+                      src={user.avatar}
+                      name={user.name}
+                      size="sm"
+                    />
+
+                    {/* User Information */}
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {user.name}
+                      </p>
+
+                      <p className="text-xs text-gray-500 truncate">
+                        {user.email}
+                      </p>
+                    </div>
+
+                  </div>
+                ))}
+
+              </div>
+            )}
+
+            {/* No Results */}
+            {searchQuery.trim() && searchResults.length === 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
+                <p className="px-4 py-4 text-sm text-gray-500 text-center">
+                  No users found
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Navigation Items */}
