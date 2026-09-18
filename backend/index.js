@@ -1,5 +1,5 @@
 import express from 'express';
-import dotenv from 'dotenv'
+import dotenv from 'dotenv';
 import connectDb from './database/db.js';
 import cookieParser from 'cookie-parser';
 import userRoutes from './routes/userRoutes.js';
@@ -9,12 +9,13 @@ import eventRoutes from './routes/eventRoutes.js';
 import cloudinary from 'cloudinary';
 import cors from 'cors';
 
-dotenv.config();
-
+dotenv.config({ path: './backend/.env' });
 const app=express();
-const cors = require("cors");
 
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+}));
 // const allowedOrigins = [
 //   'http://localhost:3000',
 //   'http://localhost:5173',
